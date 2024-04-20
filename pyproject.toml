@@ -1,0 +1,64 @@
+[tool.pdm]
+distribution = true
+
+[project]
+name = "xtils"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [{ name = "Jesse Farebrother", email = "jessefarebro@gmail.com" }]
+dependencies = [
+    "jax",
+    "jaxtyping",
+    "chex",
+    "pdbpp",
+    "rich",
+    "simple-parsing",
+    "dm-env",
+    "more-itertools",
+    "wrapt",
+    "gymnasium",
+    "scipy",
+    "fiddle @ git+https://github.com/google/fiddle",
+    "orbax[checkpoint]",
+    "python-dotenv",
+    "seaborn",
+    "matplotlib",
+    "celluloid",
+    "absl-py",
+    "tqdm",
+    "pandas",
+    "tueplots",
+    "debugpy",
+    "ale-py",
+    "aim",
+    "fancyflags",
+    "wandb",
+    "clu",
+    "requests",
+    "frozendict",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = { text = "MIT" }
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pytest.ini_options]
+addopts = "-ra -q --ignore build"
+testpaths = ["tests"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+reportMissingTypeArgument = true
+
+[tool.ruff]
+preview = true
+line-length = 120
+# Don't fix unused imports
+unfixable = ["F401"]
+# Ignore unused variables
+ignore = ["F841", "E402"]
