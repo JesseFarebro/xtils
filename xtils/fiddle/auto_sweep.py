@@ -43,14 +43,16 @@ for display purposes, e.g., displaying parameters in XManager.
 import contextlib
 import copy
 import dataclasses
-import functools
 import itertools
+import logging
 import typing
 import warnings
-from typing import Any, Iterator, Protocol, Sequence, TypeVar
+from typing import Any, Iterator, Literal, Protocol, Sequence, TypeVar
 
 import fiddle as fdl
+from fiddle import absl_flags as fdl_flags
 from fiddle import daglish, diffing, history, printing
+from fiddle.experimental import serialization
 
 T = TypeVar("T")
 
@@ -95,12 +97,30 @@ def _make_histories_from_buildable(
                 yield subpath, param_history
 
 
+@typing.overload
 def make_trials_from_sweeps(
     base: fdl.Buildable[T],
     sweeps: Sequence[SweepFunction[T]],
     *,
-    yield_args: bool = False,
-) -> Iterator[fdl.Buildable[T]]:
+    serialize_trials: Literal[True] = True,
+) -> Iterator[str]: ...
+
+
+@typing.overload
+def make_trials_from_sweeps(
+    base: fdl.Buildable[T],
+    sweeps: Sequence[SweepFunction[T]],
+    *,
+    serialize_trials: Literal[False] = False,
+) -> Iterator[fdl.Buildable[T]]: ...
+
+
+def make_trials_from_sweeps(
+    base: fdl.Buildable[T],
+    sweeps: Sequence[SweepFunction[T]],
+    *,
+    serialize_trials: bool = False,
+) -> Iterator[fdl.Buildable[T] | str]:
     """Make trials from sweeps names."""
     if not sweeps:
         yield base
@@ -111,11 +131,12 @@ def make_trials_from_sweeps(
         assert isinstance(sweep_fn, SweepFunction), f"{type(sweep_fn)} is not a SweepFunction"
         diffs.append([diffing.build_diff(base, mutated_cfg) for mutated_cfg in sweep_fn(copy.deepcopy(base))])
 
-    for diffs in itertools.product(*diffs):
+    serializer = fdl_flags.FiddleFlagSerializer(serialization.DefaultPyrefPolicy())
+    for index, diffs in enumerate(itertools.product(*diffs)):  # type: ignore
         trial = copy.deepcopy(base)
         with _track_changes():
             for diff in diffs:
-                diffing.apply_diff(diff, trial)
+                diffing.apply_diff(diff, trial)  # type: ignore
 
         # Iterate over mutations and warn the user if there were multiple mutations
         # to the same path for an individual trial.
@@ -133,7 +154,12 @@ def make_trials_from_sweeps(
                     f"{', '.join([repr(mutation.new_value) for mutation in mutations])}"
                 )
 
-        yield trial
+        logging.info(f"Sweep Trial {index}: {arguments_from_trial(base, trial)}")
+
+        if serialize_trials:
+            yield serializer.serialize(trial)
+        else:
+            yield trial
 
 
 def arguments_from_trial(base: fdl.Buildable[Any], trial: fdl.Buildable[Any]) -> dict[str, str]:
@@ -141,4 +167,4 @@ def arguments_from_trial(base: fdl.Buildable[Any], trial: fdl.Buildable[Any]) ->
     diff = diffing.build_diff(base, trial)
     skeleton = diffing.skeleton_from_diff(diff)
     diffing.apply_diff(diff, skeleton)
-    return printing.as_dict_flattened(skeleton)
+    return printing.as_dict_flattened(typing.cast(fdl.Buildable[Any], skeleton))
