@@ -2,7 +2,7 @@ import inspect
 from typing import Any, Iterator
 
 import fiddle as fdl
-from fiddle import daglish
+from fiddle import daglish, diffing
 from fiddle._src import printing
 from fiddle._src.codegen import formatting_utilities
 
@@ -31,7 +31,7 @@ def as_dict(
     def dict_generate(value, state=None) -> Iterator[printing._LeafSetting]:
         state = state or daglish.BasicTraversal.begin(dict_generate, value)
 
-        if isinstance(value, fdl.Buildable):
+        if isinstance(value, fdl.Buildable) and not isinstance(fdl.get_callable(value), diffing.AnyCallable):
             value = printing._rearrange_buildable_args(value, insert_unset_sentinels=include_defaults)
             if include_buildable_fn_or_cls:
                 annotation = printing._get_annotation(cfg, state.current_path)
@@ -65,7 +65,7 @@ def as_dict(
         match leaf:
             case printing._LeafSetting(path=(*_, daglish.BuildableFnOrCls())):
                 fn_or_cls = fdl.get_callable(leaf.value)
-                module = inspect.getmodule(fn_or_cls).__name__
+                module = inspect.getmodule(fn_or_cls).__name__  # type: ignore
                 name = fn_or_cls.__qualname__
                 node[key] = f"{module}.{name}"
             case printing._LeafSetting(value=str() | int() | float() | bool() | None):
