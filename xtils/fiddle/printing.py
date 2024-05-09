@@ -42,6 +42,8 @@ def as_dict(
                 )
 
         if not printing._has_nested_builder(value):
+            if isinstance(value, diffing.AnyValue):
+                return
             if isinstance(value, printing._UnsetValue):
                 value = value.parameter.default
             yield printing._LeafSetting(state.current_path, None, value)
