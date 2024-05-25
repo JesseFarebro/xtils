@@ -74,8 +74,7 @@ class jit(Generic[P, T_co]):
         1. `Static[]` - Mark an argument as static
             (equivalent to `static_argnums` or `static_argnames`)
         2. `Donate[]` - Mark a buffer as donated.
-            (equivalent to `donate_argnums`).
-            NOTE: Donate can only be used on non __keyword-only__ arguments.
+            (equivalent to `donate_argnums` or `donate_argnames`).
         3. `Bind[]` - When decorating a class `staticmethod` this allows you
             to bind the argument to an instance attribute.
             NOTE: We'll only attempt to bind keyword-only arguments.
@@ -133,12 +132,11 @@ class jit(Generic[P, T_co]):
 
         # Derive static and donated arguments from the signature
         has_bindings = False
-        donate_argnums = set()
+        donate_argnames = set()
         static_argnames = set()
         for index, (name, param) in enumerate(self.signature.parameters.items()):
             if is_annotated_donate(param.annotation):
-                assert param.kind is not inspect.Parameter.KEYWORD_ONLY
-                donate_argnums.add(index)
+                donate_argnames.add(index)
             if is_annotated_static(param.annotation):
                 static_argnames.add(name)
             if is_annotated_bind(param.annotation) and not has_bindings:
@@ -155,7 +153,7 @@ class jit(Generic[P, T_co]):
             backend=backend,
             inline=inline,
             abstracted_axes=abstracted_axes,
-            donate_argnums=tuple(donate_argnums),
+            donate_argnames=tuple(donate_argnames),
             static_argnames=tuple(static_argnames),
         )
 
