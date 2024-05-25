@@ -183,7 +183,9 @@ zoo = baselines.zoo()
 - `Rolling` move transform.
 - `LineLabel` mark.
 
-#### `GaussianSmooth`
+#### `Rolling`
+
+Mirrors [`pd.DataFrame.rolling`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.rolling.html).
 
 ```py
 from xtils.plotting import objects as xso
