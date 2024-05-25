@@ -1,6 +1,11 @@
 # E(X)periment Utilities
 
+A set of utilities that I frequently reuse across different projects, 
+which would be more efficiently managed in a dedicated repository.
+
 ## Jax jit++
+
+`pdm add "xtils[jitpp] @ git+https://github.com/jessefarebro/xtils"`
 
 A wrapper around `jax.jit` providing additional functionality.
 This wrapper provides three additional features over regular jit.
@@ -52,6 +57,8 @@ obj.f(1) # re-traced as `sign` is annotated static.
 
 ## Fiddle
 
+`pdm add "xtils[fiddle] @ git+https://github.com/jessefarebro/xtils"`
+
 ### Auto Sweep
 
 ```py
@@ -95,6 +102,8 @@ my_config_params = printing.as_dict(
 
 ## Common Loop Utils
 
+`pdm add "xtils[clu] @ git+https://github.com/jessefarebro/xtils"`
+
 ### Metric Writers
 
 ```py
@@ -131,6 +140,8 @@ You can customize the metric writer with:
 
 ## Domains
 
+`pdm add "xtils[domains] @ git+https://github.com/jessefarebro/xtils"`
+
 ### Atari
 
 ```py
@@ -155,6 +166,8 @@ env = dm_ale.AtariEnvironment(
 ```
 
 ## Plotting
+
+`pdm add "xtils[plotting] @ git+https://github.com/jessefarebro/xtils"`
 
 ### Theme
 
@@ -204,6 +217,8 @@ so.Plot(...)
 ```
 
 ## RL
+
+`pdm add "xtils[rl] @ git+https://github.com/jessefarebro/xtils"`
 
 ### Tabular
 
