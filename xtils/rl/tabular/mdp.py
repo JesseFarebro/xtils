@@ -1,5 +1,5 @@
-"""Create grid world environments from string layouts
-"""
+"""Create grid world environments from string layouts"""
+
 import abc
 import functools
 import itertools
@@ -7,7 +7,7 @@ import itertools
 import numpy as np
 import scipy.ndimage
 from jaxtyping import Array, Float, Num
-from matplotlib import collections, patches, colors
+from matplotlib import collections, colors, patches
 from matplotlib.axes import Axes
 from mpl_toolkits.mplot3d import art3d
 from mpl_toolkits.mplot3d.axes3d import Axes3D
@@ -17,29 +17,28 @@ RewardMatrix = Float[Array, "s a"]
 
 
 class MDP(abc.ABC):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def P(self) -> TransitionTensor:
         """Transition tensor"""
         ...
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def R(self) -> RewardMatrix:
         """Reward matrix"""
         ...
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def num_states(self) -> Num:
         """Number of states"""
         ...
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def num_actions(self) -> Num:
         """Number of actions"""
-        ...
-
-    @abc.abstractmethod
-    def render(self, axis: Axes | Axes3D, values: Float[Array, "s"], /, **kwargs) -> None:
-        """Render the environment with values."""
         ...
 
 
@@ -47,9 +46,7 @@ class MDP(abc.ABC):
 class GridWorld(MDP):
     def __init__(self, layout: str, subsample: int = 2) -> None:
         self._layout = layout
-        self._grid = np.array(
-            [[0 if char == "w" else 1 for char in line] for line in self._layout.splitlines()]
-        )
+        self._grid = np.array([[0 if char == "w" else 1 for char in line] for line in self._layout.splitlines()])
         self._grid = scipy.ndimage.zoom(self._grid, subsample, order=0)
 
         directions = [
@@ -61,8 +58,7 @@ class GridWorld(MDP):
 
         self._state_to_grid_cell = np.argwhere(self._grid)
         self._grid_cell_to_state = {
-            tuple(self._state_to_grid_cell[s].tolist()): s
-            for s in range(self._state_to_grid_cell.shape[0])
+            tuple(self._state_to_grid_cell[s].tolist()): s for s in range(self._state_to_grid_cell.shape[0])
         }
 
         nstates = self._state_to_grid_cell.shape[0]
@@ -139,9 +135,7 @@ class GridWorld(MDP):
                     or (row + 1 < nrows and col - 1 >= 0 and self._grid[row + 1, col - 1] != 0)
                     or (row - 1 >= 0 and col + 1 < ncols and self._grid[row - 1, col + 1] != 0)
                 ):
-                    rectangle = patches.Rectangle(
-                        (col, row), 2, 2, facecolor="#343a40", edgecolor="none"
-                    )
+                    rectangle = patches.Rectangle((col, row), 2, 2, facecolor="#343a40", edgecolor="none")
                     axis.add_patch(rectangle)
                     art3d.pathpatch_2d_to_3d(rectangle, z=0, zdir="z")
             else:
@@ -255,9 +249,7 @@ class GridWorld(MDP):
         axis.add_collection(wall_collection)  # pyright: ignore
 
         # Add value patches
-        value_collection = collections.PatchCollection(
-            value_patches, edgecolor=None, linewidth=0.0, **kwargs
-        )
+        value_collection = collections.PatchCollection(value_patches, edgecolor=None, linewidth=0.0, **kwargs)
         value_collection.set_array(values)
         axis.add_collection(value_collection)  # pyright: ignore
 

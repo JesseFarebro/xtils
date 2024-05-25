@@ -33,9 +33,7 @@ def reward_vector(R: RewardMatrix, policy: TabularPolicy) -> RewardVector:
 
 
 @jax.jit
-def successor_representation(
-    P: TransitionTensor, policy: TabularPolicy, discount: Num
-) -> Float[Array, "s s"]:
+def successor_representation(P: TransitionTensor, policy: TabularPolicy, discount: Num) -> Float[Array, "s s"]:
     """Compute the successor representation for a given policy."""
     chex.assert_rank([P, policy], {3, 2})
     nstates = P.shape[-1]

@@ -3,7 +3,7 @@
 import functools
 import inspect
 import typing
-from typing import Any, Dict, Generator, NamedTuple, Optional, Tuple, Union
+from typing import Any, Generator, NamedTuple
 
 import dm_env
 import gymnasium as gym
@@ -12,15 +12,65 @@ import more_itertools
 import numpy as np
 import numpy.random as npr
 import wrapt
-from chex import PRNGKey
 from dm_env import specs
 from gymnasium import spaces
 
+
+@functools.singledispatch
+def flatten_spec(spec) -> tuple[Any, ...]:
+    raise ValueError(f"Invalid spec: {type(spec)}.")
+
+
+@flatten_spec.register
+def _(spec: specs.Array) -> tuple[Any, ...]:
+    return (spec.shape, spec.dtype), (spec.name,)
+
+
+@flatten_spec.register
+def _(spec: specs.BoundedArray) -> tuple[Any, ...]:
+    return (spec.shape, spec.dtype, spec.minimum, spec.maximum), (spec.name,)
+
+
+@flatten_spec.register
+def _(spec: specs.DiscreteArray) -> tuple[Any, ...]:
+    return (spec.num_values, spec.dtype), (spec.name,)
+
+
+@flatten_spec.register
+def _(spec: specs.StringArray) -> tuple[Any, ...]:
+    return (spec.shape,), (
+        spec.string_type,
+        spec.name,
+    )
+
+
+jax.tree_util.register_pytree_node(
+    specs.Array,
+    flatten_spec,
+    lambda children, aux_data: specs.Array(*children, *aux_data),
+)
+jax.tree_util.register_pytree_node(
+    specs.BoundedArray,
+    flatten_spec,
+    lambda children, aux_data: specs.BoundedArray(*children, *aux_data),
+)
+jax.tree_util.register_pytree_node(
+    specs.DiscreteArray,
+    flatten_spec,
+    lambda children, aux_data: specs.DiscreteArray(*children, *aux_data),
+)
+jax.tree_util.register_pytree_node(
+    specs.StringArray,
+    flatten_spec,
+    lambda children, aux_data: specs.StringArray(*children, *aux_data),
+)
+
+
 __all__ = ["make", "GymEnvWrapper"]
 
-SpecTuple = Tuple[specs.Array, ...]
-SpecDict = Dict[specs.Array, Union["SpecDict", SpecTuple, specs.Array]]
-SpecTree = Union[specs.Array, SpecDict, SpecTuple, Tuple["SpecTree", ...]]
+SpecTuple = tuple[specs.Array, ...]
+SpecDict = dict[specs.Array, "SpecDict" | SpecTuple | specs.Array]
+SpecTree = specs.Array | SpecDict | SpecTuple | tuple["SpecTree", ...]
 
 
 @functools.singledispatch
@@ -56,7 +106,7 @@ def _(space: spaces.MultiDiscrete) -> SpecTuple:
     )
 
 
-def _(space: spaces.Tuple) -> Tuple[SpecTree, ...]:
+def _(space: spaces.Tuple) -> tuple[SpecTree, ...]:
     """Convert tuple space."""
     return tuple(typing.cast(SpecTree, convert_space(child)) for child in space.spaces)
 
@@ -73,7 +123,7 @@ class GymObservation(NamedTuple):
     """Gym observation tuple."""
 
     observation: Any
-    infos: Dict[str, Any]
+    infos: dict[str, Any]
 
 
 class GymCompatabilityWrapper(wrapt.ObjectProxy):
@@ -82,9 +132,9 @@ class GymCompatabilityWrapper(wrapt.ObjectProxy):
     def reset(
         self,
         *,
-        seed: Optional[int] = None,
-        options: Optional[dict] = None,
-    ) -> Tuple[Any, dict[str, Any]]:
+        seed: int | None = None,
+        options: dict[Any, Any] | None = None,
+    ) -> tuple[Any, dict[str, Any]]:
         if not hasattr(self, "_reset_signature"):
             self._reset_signature = inspect.signature(self.__wrapped__.unwrapped.reset)
 
@@ -119,7 +169,7 @@ class GymCompatabilityWrapper(wrapt.ObjectProxy):
 
         return observation, infos
 
-    def step(self, action: Any) -> Tuple[Any, float, bool, bool, dict[str, Any]]:
+    def step(self, action: Any) -> tuple[Any, float, bool, bool, dict[str, Any]]:
         transition = self.__wrapped__.step(action)
 
         # Gym >= 0.26 returns a 5-tuple with truncation whereas Gym < 0.26
@@ -139,7 +189,7 @@ class GymCompatabilityWrapper(wrapt.ObjectProxy):
 class GymEnvWrapper(dm_env.Environment):
     """DeepMind environment wrapper for Gym environments."""
 
-    def __init__(self, env: gym.Env[Any, Any], *, seed: Optional[Union[int, PRNGKey, npr.SeedSequence]]):
+    def __init__(self, env: gym.Env[Any, Any], *, seed: int | jax.Array | npr.SeedSequence | None):
         self._env = GymCompatabilityWrapper(env)
         self._reset_next_step = True
 
@@ -147,7 +197,7 @@ class GymEnvWrapper(dm_env.Environment):
         match seed:
             case None:
                 seed = npr.SeedSequence()
-            case PRNGKey() | int():
+            case jax.Array() | int():
                 seed = npr.SeedSequence(np.asarray(seed))
 
         seed = typing.cast(npr.SeedSequence, seed)
@@ -212,7 +262,7 @@ def make(
     id: str,
     /,
     *,
-    seed: Optional[Union[int, PRNGKey, npr.SeedSequence]] = None,
+    seed: int | jax.Array | npr.SeedSequence | None = None,
     **kwargs,
 ) -> dm_env.Environment:
     env = gym.make(id, **kwargs)

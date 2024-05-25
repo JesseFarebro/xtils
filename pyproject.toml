@@ -4,39 +4,38 @@ distribution = true
 [project]
 name = "xtils"
 version = "0.1.0"
-description = "Default template for PDM package"
+description = "A collection of utilities for machine learning experiments."
 authors = [{ name = "Jesse Farebrother", email = "jessefarebro@gmail.com" }]
-dependencies = [
-    "jax",
-    "jaxtyping",
-    "chex",
-    "pdbpp",
-    "rich",
-    "simple-parsing",
-    "dm-env",
-    "more-itertools",
-    "wrapt",
-    "gymnasium",
-    "scipy",
-    "fiddle @ git+https://github.com/google/fiddle",
-    "orbax[checkpoint]",
-    "python-dotenv",
+dependencies = []
+
+[project.optional-dependencies]
+jitpp = ["jax"]
+stade = ["jax", "gymnasium", "dm-env", "wrapt", "numpy", "more-itertools"]
+vscode = ["debugpy", "portpicker", "requests"]
+clu = ["clu", "aim", "wandb", "fancyflags"]
+plotting = [
+    "frozendict",
     "seaborn",
     "matplotlib",
-    "celluloid",
-    "absl-py",
-    "tqdm",
     "pandas",
-    "tueplots",
-    "debugpy",
-    "ale-py",
-    "aim",
-    "fancyflags",
-    "wandb",
-    "clu",
-    "requests",
-    "frozendict",
+    "aiohttp-client-cache",
+    "scipy",
 ]
+domains = ["jax", "dm-env", "ale-py", "opencv-python", "numpy"]
+fiddle = ["fiddle"]
+rl = ["jax", "jaxtyping", "chex", "matplotlib", "numpy", "scipy"]
+
+all = [
+    "xtils[jitpp]",
+    "xtils[stade]",
+    "xtils[vscode]",
+    "xtils[clu]",
+    "xtils[plotting]",
+    "xtils[domains]",
+    "xtils[fiddle]",
+    "xtils[rl]",
+]
+
 requires-python = ">=3.10"
 readme = "README.md"
 license = { text = "MIT" }
@@ -44,7 +43,6 @@ license = { text = "MIT" }
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
-
 
 [tool.pytest.ini_options]
 addopts = "-ra -q --ignore build"

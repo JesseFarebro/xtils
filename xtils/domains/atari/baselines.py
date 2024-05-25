@@ -1,4 +1,3 @@
-import math
 from typing import Dict, NamedTuple
 
 from xtils.domains.atari.environment import AtariGame

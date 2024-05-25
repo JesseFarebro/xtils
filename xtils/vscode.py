@@ -68,7 +68,7 @@ def attach_to_debugpy() -> None:
     os.environ["PYTHONBREAKPOINT"] = "debugpy.breakpoint"
 
     import debugpy
-    import portpicker
+    import portpicker  # type: ignore
 
     # Find an open port to listen on
     port = portpicker.pick_unused_port()

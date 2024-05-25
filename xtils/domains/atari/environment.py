@@ -1,17 +1,16 @@
 import dataclasses
 import enum
 import typing
-from typing import Literal, Mapping, Sequence
+from typing import Literal, Mapping, NotRequired, Sequence, TypedDict
 
 import ale_py
 import dm_env
+import jax
 import numpy as np
 import numpy.typing as npt
-import tree
 from ale_py import roms
 from dm_env import specs
 from dm_env.auto_reset_environment import AutoResetEnvironment
-from typing_extensions import NotRequired, TypedDict
 
 from xtils.domains.atari import metadata as game_metadata
 
@@ -259,8 +258,8 @@ class AtariEnvironmentConfig:
 
         seed = self.seed
         if seed is None or not isinstance(seed, np.random.SeedSequence):
-            seed = np.random.SeedSequence(self.seed)  # pyright: ignore
-        ale.setInt("random_seed", seed.generate_state(1).astype(np.int32))
+            seed = np.random.SeedSequence(self.seed)  # type: ignore
+        ale.setInt("random_seed", seed.generate_state(1).astype(np.int32))  # type: ignore
 
         # Stochasticity settings
         ale.setFloat("repeat_action_probability", self.repeat_action_probability)
@@ -381,10 +380,7 @@ class AtariEnvironment(AutoResetEnvironment):
             else:
                 raise ValueError(f"Invalid observation type {observation_type}")
 
-        return tree.map_structure(
-            _map_observation,
-            self._observation_types,
-        )  # pyright: ignore
+        return jax.tree.map(_map_observation, self._observation_types)
 
     def reward_spec(self) -> specs.Array:
         return specs.Array(shape=(), dtype=np.int32, name="reward")
@@ -392,7 +388,7 @@ class AtariEnvironment(AutoResetEnvironment):
     def observation_spec(self) -> AtariEnvironmentObservationSpec:
         def _map_observation_spec(
             observation_type,
-        ) -> specs.Array | dict[str, specs.Array]]:
+        ) -> specs.Array | dict[str, specs.Array]:
             height, width = self._ale.getScreenDims()
             if observation_type == ObservationType.ImageRGB:
                 shape = (height, width, 3)
@@ -420,7 +416,7 @@ class AtariEnvironment(AutoResetEnvironment):
                 name=observation_type.name,
             )
 
-        return tree.map_structure(_map_observation_spec, self._observation_types)  # pyright: ignore
+        return jax.tree.map(_map_observation_spec, self._observation_types)
 
     def action_spec(self) -> specs.DiscreteArray:
         return specs.DiscreteArray(
@@ -475,10 +471,10 @@ class AtariEnvironment(AutoResetEnvironment):
     def __getstate__(self) -> AtariEnvironmentState:
         return AtariEnvironmentState(
             config=self._config,
-            ale=self._ale.getSystemState(),
+            ale=self._ale.getSystemState(),  # type: ignore
         )
 
     def __setstate__(self, state: AtariEnvironmentState) -> None:
         self._config = state["config"]
         self._ale, self._action_set = self._config.interface()
-        self._ale.loadState(state["ale"])
+        self._ale.loadState(state["ale"])  # type: ignore

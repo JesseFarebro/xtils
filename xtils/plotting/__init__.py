@@ -70,6 +70,8 @@ THEME = frozendict.deepfreeze({
     "axes.titlepad": 10,
     "axes.titlesize": 20,
     "text.latex.preamble": r"\usepackage{jmath}",
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
 })
 
 __all__ = ["THEME"]

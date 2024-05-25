@@ -34,8 +34,8 @@ from typing import Any, Callable, Iterable, List, Optional, Sequence, Text, Tupl
 
 import cv2
 import dm_env
+import jax
 import numpy as np
-import tree
 from dm_env import specs
 
 from xtils.domains.atari.environment import AtariEnvironment, ObservationType
@@ -554,10 +554,7 @@ class AtariPreprocessorWrapper(dm_env.Environment):
         self._processor = processor
 
         # Check the processor output shape to determine the new observation spec.
-        dummy_observation = tree.map_structure(
-            lambda spec: spec.generate_value(),
-            observation_spec,
-        )
+        dummy_observation = jax.tree.map(lambda spec: spec.generate_value(), observation_spec)
         dummy_timestep = dm_env.restart(dummy_observation)
         processed_timestep = typing.cast(
             dm_env.TimeStep,

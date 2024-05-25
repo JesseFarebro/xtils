@@ -5,7 +5,6 @@ from typing import Annotated, Any, Callable, Generic, ParamSpec, TypeGuard, Type
 
 import jax
 from jax._src.sharding_impls import UNSPECIFIED, UnspecifiedValue
-from typing_extensions import Self
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -53,12 +52,12 @@ def is_annotated_bind(typ: T) -> TypeGuard[Bind[T]]:
     return _is_annotated_with(typ, _BindSentinel)
 
 
-class BoundWrapper(jax.stages.Wrapped):
+class BoundWrapper(jax.stages.Wrapped, Generic[P, T_co]):
     def __init__(self, fn: jax.stages.Wrapped, **kwargs):
         self.fn = fn
         self.kwargs = kwargs
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> T_co:
         return self.fn(*args, **kwargs, **self.kwargs)
 
     def lower(self, *args, **kwargs) -> jax.stages.Lowered:
@@ -114,7 +113,7 @@ class jit(Generic[P, T_co]):
     __qualname__: str = "jit"
 
     def __init__(
-        self: Self,
+        self,
         fn: Callable[P, T_co],
         /,
         *,
@@ -160,7 +159,7 @@ class jit(Generic[P, T_co]):
             static_argnames=tuple(static_argnames),
         )
 
-    def __get__(self: Self, obj: T, typ: type[T] | None = None) -> BoundWrapper:
+    def __get__(self, obj: T, typ: type[T] | None = None) -> BoundWrapper[P, T_co]:
         """Descriptor method called if `jit` is a method decorator.
 
         In this case we'll attempt to bind all keyword only arguments annotated with `Bind[]`."""
@@ -184,16 +183,16 @@ class jit(Generic[P, T_co]):
         return BoundWrapper(self.fn, **bound)
 
     @property
-    def __func__(self: Self) -> jax.stages.Wrapped:
+    def __func__(self) -> jax.stages.Wrapped:
         """Allow introspection of the wrapped function."""
         return self.fn
 
     @property
-    def __wrapped__(self: Self) -> jax.stages.Wrapped:
+    def __wrapped__(self) -> jax.stages.Wrapped:
         """Allow introspection of the wrapped function."""
         return self.fn
 
-    def __call__(self: Self, *args: P.args, **kwargs: P.kwargs) -> T_co:
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> T_co:
         """Executes the wrapped function, lowering and compiling as needed."""
         if self.has_bindings:
             ba = filter(
@@ -207,7 +206,7 @@ class jit(Generic[P, T_co]):
             )
         return self.fn(*args, **kwargs)
 
-    def lower(self: Self, *args: P.args, **kwargs: P.kwargs) -> jax.stages.Lowered:
+    def lower(self, *args: P.args, **kwargs: P.kwargs) -> jax.stages.Lowered:
         """Lower this function explicitly for the given arguments.
 
         A lowered function is staged out of Python and translated to a
@@ -218,11 +217,11 @@ class jit(Generic[P, T_co]):
         A ``Lowered`` instance representing the lowering."""
         return self.fn.lower(*args, **kwargs)
 
-    def __repr__(self: Self) -> str:
+    def __repr__(self) -> str:
         """Return the representation of the wrapped function."""
         return repr(self.fn)
 
     @property
-    def __isabstractmethod__(self: Self) -> bool:
+    def __isabstractmethod__(self) -> bool:
         """Return whether the wrapped function is abstract."""
         return getattr(self.fn, "__isabstractmethod__", False)
