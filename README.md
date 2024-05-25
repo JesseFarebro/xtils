@@ -1,5 +1,55 @@
 # E(X)periment Utilities
 
+## Jax jit++
+
+A wrapper around `jax.jit` providing additional functionality.
+This wrapper provides three additional features over regular jit.
+  1. Proper type hints for jitted functions. This makes it so tools like
+    pyright can show autocompletions for your jitted functions.
+  2. You can use type annotations to specify static and donated arguments
+    with the `Static[]` and `Donate[]` annotation types.
+  3. A somewhat opinionated way to bind attributes of a class so that you
+    can jit static class methods more easily while still retaining the
+    modularity of classes.
+
+Functional example of type annotations:
+```python
+from xtils import jitpp
+from xtils.jitpp import Static, Donate
+
+@jitpp.jit
+def f(x: Donate[int], sign: Static[int]) -> int:
+    return x * sign
+
+f(1, -1)
+f(1, 1) # re-traced as `sign` is annotated static.
+```
+
+> [!CAUTION]
+> If you use other decorators between `@jitpp.jit` and your function this could
+> potentially cause problems if the type annotations are stripped or if arguments
+> are permuted.
+
+Class-based `staticmethod` example:
+```python
+from xtils import jitpp
+from xtils.jitpp import Static, Donate, Bind
+
+@dataclasses.dataclass
+class MyClass:
+    sign: float
+
+    @jitpp.jit
+    @staticmethod
+    def f(x: Donate[int], *, sign: Bind[Static[int]]) -> int:
+        return x * sign
+
+obj = MyClass(sign=-1)
+obj.f(1) # NOTE: sign doesn't need to be provided as its bound to `obj.sign`
+obj.sign = 1
+obj.f(1) # re-traced as `sign` is annotated static.
+```
+
 ## Fiddle
 
 ### Auto Sweep
@@ -130,7 +180,7 @@ zoo = baselines.zoo()
 
 ### Seaborn Objects
 
-- `GaussianSmooth` move transform.
+- `Rolling` move transform.
 - `LineLabel` mark.
 
 #### `GaussianSmooth`
@@ -139,7 +189,7 @@ zoo = baselines.zoo()
 from xtils.plotting import objects as xso
 
 so.Plot(...)
-  .add(so.Line(), so.Agg(), xso.GaussianSmooth(sigma=1))
+  .add(so.Line(), so.Agg(), xso.Rolling())
 ```
 
 #### `LineLabel`
