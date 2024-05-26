@@ -136,7 +136,7 @@ class jit(Generic[P, T_co]):
         static_argnames = set()
         for index, (name, param) in enumerate(self.signature.parameters.items()):
             if is_annotated_donate(param.annotation):
-                donate_argnames.add(index)
+                donate_argnames.add(name)
             if is_annotated_static(param.annotation):
                 static_argnames.add(name)
             if is_annotated_bind(param.annotation) and not has_bindings:
