@@ -1,3 +1,4 @@
+from __future__ import annotations
 import jax
 from xtils import jitpp
 from xtils.jitpp import Static
@@ -12,7 +13,7 @@ def foo(
     return a
 
 
-def test_jitpp():
+def test_jitpp_with_future_annotations():
     a = jax.numpy.array([1, 2, 3])
 
     def check(fn):

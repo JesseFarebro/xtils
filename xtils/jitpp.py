@@ -5,6 +5,7 @@ from typing import Annotated, Any, Callable, Generic, ParamSpec, TypeGuard, Type
 
 import jax
 from jax._src.sharding_impls import UNSPECIFIED, UnspecifiedValue
+from typing import get_type_hints
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -129,17 +130,20 @@ class jit(Generic[P, T_co]):
         if isinstance(fn, staticmethod):
             fn = getattr(fn, "__func__")
         self.signature = inspect.signature(fn)
+        type_hints = get_type_hints(fn, include_extras=True)
 
         # Derive static and donated arguments from the signature
         has_bindings = False
         donate_argnames = set()
         static_argnames = set()
         for index, (name, param) in enumerate(self.signature.parameters.items()):
-            if is_annotated_donate(param.annotation):
+            annotation = type_hints[name] if isinstance(param.annotation, str) else param.annotation
+
+            if is_annotated_donate(annotation):
                 donate_argnames.add(name)
-            if is_annotated_static(param.annotation):
+            if is_annotated_static(annotation):
                 static_argnames.add(name)
-            if is_annotated_bind(param.annotation) and not has_bindings:
+            if is_annotated_bind(annotation) and not has_bindings:
                 has_bindings = True
         self.has_bindings = has_bindings
 
