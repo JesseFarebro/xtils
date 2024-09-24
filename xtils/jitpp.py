@@ -1,11 +1,10 @@
 import dataclasses
 import inspect
 import typing
-from typing import Annotated, Any, Callable, Generic, ParamSpec, TypeGuard, TypeVar
+from typing import Annotated, Any, Callable, Generic, ParamSpec, TypeGuard, TypeVar, get_type_hints
 
 import jax
 from jax._src.sharding_impls import UNSPECIFIED, UnspecifiedValue
-from typing import get_type_hints
 
 P = ParamSpec("P")
 T = TypeVar("T")
