@@ -3,9 +3,9 @@
 A set of utilities that I frequently reuse across different projects, 
 which would be more efficiently managed in a dedicated repository.
 
-## Jax jit++
+## Jax jit++ (jitpp)
 
-`pdm add "xtils[jitpp] @ git+https://github.com/jessefarebro/xtils"`
+`uv add "xtils[jitpp] @ git+https://github.com/jessefarebro/xtils"`
 
 A wrapper around `jax.jit` providing additional functionality.
 This wrapper provides three additional features over regular jit.
@@ -55,9 +55,30 @@ obj.sign = 1
 obj.f(1) # re-traced as `sign` is annotated static.
 ```
 
+## Jax debugger++ (jdbpp)
+
+`uv add "xtils[jdbpp] @ git+https://github.com/jessefarebro/xtils"`
+
+An improved version of the builtin Jax debugger. It supports features like:
+
+- An improved UI (e.g., code highlighting, pretty backtrace, prettyprint)
+- Ability to run arbitrary commands like pdb, e.g., importing libraries
+- IPython shell
+- Command history logging so e.g., you can press up to get previous commands from prior sessions
+
+Additional commands include:
+
+- `interact` or `i` to drop into an IPython shell
+- `ll` for long-list to list the entire file
+- `shape` or `s` to get the shapes of all the variables in the current context
+- `pdef`, `pdoc`, `pfile`, `pinfo`, `psource`, and magic commands from IPython
+- `v` to get a table of the variables in scope
+
+All you need to do in order to use jdbpp is to import `xtils.jdbpp` and it will register itself with Jax.
+
 ## Fiddle
 
-`pdm add "xtils[fiddle] @ git+https://github.com/jessefarebro/xtils"`
+`uv add "xtils[fiddle] @ git+https://github.com/jessefarebro/xtils"`
 
 ### Auto Sweep
 
@@ -102,7 +123,7 @@ my_config_params = printing.as_dict(
 
 ## Common Loop Utils
 
-`pdm add "xtils[clu] @ git+https://github.com/jessefarebro/xtils"`
+`uv add "xtils[clu] @ git+https://github.com/jessefarebro/xtils"`
 
 ### Metric Writers
 
@@ -140,7 +161,7 @@ You can customize the metric writer with:
 
 ## Domains
 
-`pdm add "xtils[domains] @ git+https://github.com/jessefarebro/xtils"`
+`uv add "xtils[domains] @ git+https://github.com/jessefarebro/xtils"`
 
 ### Atari
 
@@ -167,7 +188,7 @@ env = dm_ale.AtariEnvironment(
 
 ## Plotting
 
-`pdm add "xtils[plotting] @ git+https://github.com/jessefarebro/xtils"`
+`uv add "xtils[plotting] @ git+https://github.com/jessefarebro/xtils"`
 
 ### Theme
 
@@ -218,7 +239,7 @@ so.Plot(...)
 
 ## RL
 
-`pdm add "xtils[rl] @ git+https://github.com/jessefarebro/xtils"`
+`uv add "xtils[rl] @ git+https://github.com/jessefarebro/xtils"`
 
 ### Tabular
 

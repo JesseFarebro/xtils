@@ -14,6 +14,7 @@ license = { text = "MIT" }
 
 [project.optional-dependencies]
 jitpp = ["jax"]
+jdbpp = ["jax", "IPython", "rich", "wadler_lindig"]
 stade = ["jax", "gymnasium", "dm-env", "wrapt", "numpy", "more-itertools"]
 vscode = ["debugpy", "portpicker", "requests"]
 clu = ["clu", "aim", "wandb", "fancyflags"]
@@ -31,6 +32,7 @@ rl = ["jax", "jaxtyping", "chex", "matplotlib", "numpy", "scipy"]
 
 all = [
     "xtils[jitpp]",
+    "xtils[jdbpp]",
     "xtils[stade]",
     "xtils[vscode]",
     "xtils[clu]",
