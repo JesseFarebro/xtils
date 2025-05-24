@@ -6,13 +6,17 @@ import socket
 def _make_vscode_debug_launcher_uri(port: int):
     launch_config = {
         "name": "Python: Remote Attach",
-        "type": "python",
+        "type": "debugpy",
         "request": "attach",
+        "presentation": {"hidden": True},
+        "purpose": ["debug-in-terminal"],
         "connect": {"host": "localhost", "port": port},
         "pathMappings": [{"localRoot": "${workspaceFolder}", "remoteRoot": os.getcwd()}],
-        "justMyCode": False,
-        "console": "internalConsole",
-        "redirectOutput": "true",
+        "justMyCode": True,
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "redirectOutput": "false",
+        "autoReload": {"enable": False},
     }
     launch_config = json.dumps(launch_config)
     return f"vscode://fabiospampinato.vscode-debug-launcher/launch?args={launch_config}"
@@ -39,11 +43,16 @@ def _handle_vscode_remote(vscode_ipc: str, port: int) -> None:
         def __init__(self):
             super().__init__("localhost")
 
-        def _new_conn(self):
+        def _new_conn(self):  # type: ignore
             return VSCodeIPCConnection()
 
     class VSCodeIPCAdapter(HTTPAdapter):
         def get_connection(self, url, proxies=None):
+            del url, proxies
+            return VSCodeIPCConnectionPool()
+
+        def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
+            del request, verify, proxies, cert
             return VSCodeIPCConnectionPool()
 
     session = requests.Session()
@@ -76,7 +85,7 @@ def attach_to_debugpy() -> None:
 
     # If we're in a local vscode terminal session, we need to tell VSCode to connect to the debug adapter
     # using fabiospampinato.vscode-debug-launcher extension
-    if os.environ.get("TERM_PROGRAM", None) == "vscode":
+    if is_vscode_tty():
         if vscode_ipc := os.environ.get("VSCODE_IPC_HOOK_CLI", None):
             _handle_vscode_remote(vscode_ipc, port)
         else:
@@ -85,3 +94,7 @@ def attach_to_debugpy() -> None:
         print(f"Waiting for debugger to attach on port {port}...")
 
     debugpy.wait_for_client()
+
+
+def is_vscode_tty() -> bool:
+    return os.environ.get("TERM_PROGRAM", None) == "vscode" and os.environ.get("TERM_PROGRAM_VERSION", None) is not None
