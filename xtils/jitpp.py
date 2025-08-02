@@ -1,10 +1,12 @@
 import dataclasses
 import inspect
 import typing
-from typing import Annotated, Any, Callable, Generic, ParamSpec, TypeGuard, TypeVar, get_type_hints
+from typing import Annotated, Any, Callable, FrozenSet, Generic, ParamSpec, TypeGuard, TypeVar, get_type_hints
 
+import chex
 import jax
 from jax._src.sharding_impls import UNSPECIFIED, UnspecifiedValue
+from jax.experimental import checkify
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -123,6 +125,7 @@ class jit(Generic[P, T_co]):
         backend: str | None = None,
         inline: bool = False,
         abstracted_axes: Any | None = None,
+        chexify_checks: FrozenSet[checkify.ErrorCategory] | None = None,
     ) -> None:
         """Initialize the jit decorator."""
         # Unwrap a static function
@@ -159,6 +162,8 @@ class jit(Generic[P, T_co]):
             donate_argnames=tuple(donate_argnames),
             static_argnames=tuple(static_argnames),
         )
+        if chexify_checks is not None:
+            self.fn = chex.chexify(self.fn, errors=chexify_checks)
 
     def __get__(self, obj: T, typ: type[T] | None = None) -> BoundWrapper[P, T_co]:
         """Descriptor method called if `jit` is a method decorator.

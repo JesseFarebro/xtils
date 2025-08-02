@@ -13,7 +13,7 @@ readme = "README.md"
 license = { text = "MIT" }
 
 [project.optional-dependencies]
-jitpp = ["jax"]
+jitpp = ["jax", "chex"]
 jdbpp = ["jax", "IPython", "rich", "wadler_lindig"]
 stade = ["jax", "gymnasium", "dm-env", "wrapt", "numpy", "more-itertools"]
 vscode = ["debugpy", "portpicker", "requests"]
