@@ -124,7 +124,6 @@ class jit(Generic[P, T_co]):
         device: jax.Device | None = None,
         backend: str | None = None,
         inline: bool = False,
-        abstracted_axes: Any | None = None,
         chexify_checks: FrozenSet[checkify.ErrorCategory] | None = None,
     ) -> None:
         """Initialize the jit decorator."""
@@ -158,7 +157,6 @@ class jit(Generic[P, T_co]):
             device=device,
             backend=backend,
             inline=inline,
-            abstracted_axes=abstracted_axes,
             donate_argnames=tuple(donate_argnames),
             static_argnames=tuple(static_argnames),
         )
